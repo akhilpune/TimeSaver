@@ -1,0 +1,113 @@
+Running a Node Steps:(Prepared by Akhil)
+
+1.Docker Creation:
+
+$ docker pull jrei/systemd-ubuntu
+
+$ docker run -d --name systemd-ubuntu --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro -p 1317:1317 -p 26657:26657 -p 26656:26656 -p 8545:8545 -p 8546:8546 --name validator jrei/systemd-ubuntu
+
+$ docker exec -it validator bash
+
+commands:
+
+$ apt-get update
+$ apt-get install git nano rabbitmq-server build-essential curl wget
+
+=> Install GO:
+
+$ curl https://raw.githubusercontent.com/akhilpune/TimeSaver/master/go-install.sh > install_go.sh \
+&& bash install_go.sh \
+&& mkdir -p $HOME/go/bin \
+&& echo "export GOPATH=$HOME/go" >> ~/.bash_profile \
+&& source ~/.bash_profile \
+&& echo "export GOBIN=$GOPATH/bin" >> ~/.bash_profile \
+&& source ~/.bash_profile \
+&& echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile \
+&& source ~/.bash_profile 
+
+$ source /root/.bashrc
+
+******************WATCHMAN INSTALLATION*********************
+
+$ mkdir -p $GOPATH/src/github.com/dojimanetwork \
+&& cd $GOPATH/src/github.com/dojimanetwork \
+&& git clone https://github.com/dojimanetwork/watchman.git \
+&& cd watchman \
+&& make build && make install
+
+//running below command will display NODE-ID . Then everything is working fine
+$ make init-heimdall  
+
+******************BULLDOG INSTALLATION*********************
+
+
+$ mkdir -p $GOPATH/src/github.com/dojimanetwork \
+&& cd $GOPATH/src/github.com/dojimanetwork \
+&& git clone -b v0.0.6-main https://github.com/dojimanetwork/bulldog.git \
+&& cd bulldog 
+
+$  make bor-all
+
+******************SETUP*********************
+
+$ cd ~/ \
+&& git clone https://github.com/dojimanetwork/launch.git \
+&& cp -rf launch/dojima-t1/without-sentry ~/node  \
+&& cp launch/dojima-t1/service.sh ~/node
+
+//Watchman setup
+$ cd ~/node/watchman \
+&& bash setup.sh
+
+//bulldog setup
+$ cd ~/node/bulldog \
+&& bash setup.sh
+
+//Service files
+cd ~/node \
+&& bash service.sh \
+&& cp *.service /etc/systemd/system/
+
+//create metadata file
+$ cp -rf ~/node/metadata /etc/dojima/
+
+************* MANUAL STEPS ************************
+
+///Print ENODE ADDRESS
+$ bootnode -nodekey ~/.bor/data/bor/nodekey -writeaddress 
+
+///Generate Watchman Private key
+$   heimdallcli generate-validatorkey <Your Ethereum/Goerli wallet private key>
+$  mv ./priv_validator_key.json ~/.heimdalld/config
+
+///Generate Watchman Private key
+$ heimdallcli generate-keystore <Your Ethereum/>Goerli wallet private key>
+//manually type according to file generated
+$ mv ./UTC-<time>-<address> ~/.bor/keystore/
+$ nano ~/.bor/password.txt
+
+----Finding IP address in docker
+sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' validator
+
+********************Starting WATCHMAN***************************
+
+$ service heimdalld start
+
+$ service heimdalld-rest-server start
+
+$ service heimdalld-bridge start
+
+//////////commands to check logs
+journalctl -u heimdalld.service -f
+journalctl -u heimdalld-rest-server.service -f
+journalctl -u heimdalld-bridge.service -f
+
+********************Starting BOR ***************************
+
+// You'll find the following in bor directory in Public testnets folder
+$ cd ~/node/bulldog
+
+$ bash start.sh <Your address>
+
+////////////commasds to check logs 
+journalctl -u bor.service -f
