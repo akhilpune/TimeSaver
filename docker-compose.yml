@@ -1,0 +1,55 @@
+version: "3.3"
+
+networks:
+  local-validator-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+
+services:
+
+  validator1:
+    image: "jrei/systemd-ubuntu"
+    command: >
+      bash -c "
+        cd /root \
+        && apt-get update \
+        && apt-get install openssh-server nano \
+        && systemctl enable ssh \
+        && systemctl start ssh
+      "
+    container_name: validator1
+    networks:
+      - local-validator-network
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    ports:
+      - "1317:1317"
+      - "26657:26657"
+      - "26656:26656"
+      - "8545:8545"
+      - "8546:8546"
+    
+  validator2:
+    image: "jrei/systemd-ubuntu"
+    container_name: validator2
+    command: >
+      bash -c "
+        cd /root \
+        && apt-get update \
+        && apt-get install openssh-server nano \
+        && systemctl enable ssh \
+        && systemctl start ssh
+      "
+    networks:
+      local-validator-network:
+          ipv4_address: 172.20.1.100
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    ports:
+      - "1318:1317"
+      - "26659:26657"
+      - "26658:26656"
+      - "8547:8545"
+      - "8548:8546"
