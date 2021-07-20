@@ -14,12 +14,6 @@ services:
     build: .
     container_name: validator1
     privileged: true
-    command: >
-      bash -c "
-        cd /root \
-        && systemctl enable ssh \
-        && systemctl start ssh
-      "
     networks:
       - local-validator-network
     volumes:
