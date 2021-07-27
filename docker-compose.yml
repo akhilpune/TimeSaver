@@ -42,3 +42,20 @@ services:
       - "26658:26656"
       - "8547:8545"
       - "8548:8546"
+
+  validator3:
+    image: "dojima"
+    build: .
+    container_name: validator3
+    privileged: true
+    networks:
+      - local-validator-network
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    ports:
+      - "2203:22"
+      - "1319:1317"
+      - "26661:26657"
+      - "26660:26656"
+      - "8549:8545"
+      - "8550:8546"  
